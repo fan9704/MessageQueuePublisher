@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js" type="text/javascript"></script>
+</head>
+
+<body>
+
+    <h1>Hello Frontend</h1>
+    <script type="text/javascript">
+        // mqtt協議rabbitmq服務
+        // var brokerIp = location.hostname;
+        var brokerIp = "127.0.0.1";
+        // mqtt協議端口號
+        var port = 15675;
+        // 接受推送消息的主題
+        var topic = "push_message_topic";
+        // mqtt連接
+        client = new Paho.MQTT.Client(brokerIp, port, "/ws", "clientId_" + parseInt(Math.random() * 100, 10));
+        var options = {
+            timeout: 3, //超時時間
+            keepAliveInterval: 30, //心跳時間
+            onSuccess: function() {
+                console.log(("連接成功~"));
+                client.subscribe(topic, {
+                    qos: 1
+                });
+            },
+            onFailure: function(message) {
+                console.log(("連接失敗~" + message.errorMessage));
+            }
+        };
+        // 考慮到https的情況
+        if (location.protocol == "https:") {
+            options.useSSL = true;
+        }
+        client.connect(options);
+        console.log(("已經連接到" + brokerIp + ":" + port));
+        // 連接斷開事件
+        client.onConnectionLost = function(responseObject) {
+            console.log("失去連接 - " + responseObject.errorMessage);
+        };
+        // 接收消息事件
+        client.onMessageArrived = function(message) {
+            console.log("接受主題： " + message.destinationName + "的消息： " + message.payloadString);
+            $("#arrivedDiv").append("<br/>" + message.payloadString);
+            var count = $("#count").text();
+            count = Number(count) + 1;
+            $("#count").text(count);
+        };
+        // 推送給指定主題
+        function sendMessage() {
+            var a = $("#message").val();
+            if (client.isConnected()) {
+                var message = new Paho.MQTT.Message(a);
+                message.destinationName = topic;
+                client.send(message);
+            }
+        }
+    </script>
+</body>
+
+</html>
