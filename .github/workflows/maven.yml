@@ -13,7 +13,16 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-
+    #Step Up RabbitMQ
+    services:
+      rabbitmq:
+        image: rabbitmq:3.8
+        env:
+          RABBITMQ_DEFAULT_USER: guest
+          RABBITMQ_DEFAULT_PASS: guest
+        ports:
+          - 5672
+    #Setup JDK 17
     steps:
     - uses: actions/checkout@v3
     - name: Set up JDK 17
@@ -22,5 +31,10 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: maven
+    #Build Maven Package
     - name: Build with Maven
       run: mvn -B package --file pom.xml
+    #Run Tests
+    - name: Run Tests
+      run: mvn -B test
+
